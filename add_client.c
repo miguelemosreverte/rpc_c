@@ -13,6 +13,8 @@ add_prog_5(char *host)
 	CLIENT *clnt;
 	int  *result_1;
 	intpair  add_5_arg;
+	add_5_arg.a = 123;
+	add_5_arg.b = 22;
 
 #ifndef	DEBUG
 	clnt = clnt_create (host, ADD_PROG, ADD_VERS, "udp");
@@ -25,6 +27,9 @@ add_prog_5(char *host)
 	result_1 = add_5(&add_5_arg, clnt);
 	if (result_1 == (int *) NULL) {
 		clnt_perror (clnt, "call failed");
+	}
+	else{
+		printf("resultado = %d\n", *result_1);
 	}
 #ifndef	DEBUG
 	clnt_destroy (clnt);

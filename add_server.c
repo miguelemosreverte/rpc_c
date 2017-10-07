@@ -14,6 +14,9 @@ add_5_svc(intpair *argp, struct svc_req *rqstp)
 	/*
 	 * insert server code here
 	 */
-
+	 printf("llamada al servidor\n");
+	 printf("valores a sumar: %d, %d\n", argp->a, argp->b);
+	 result = argp->a + argp->b;
+	 printf("returning: %d\n", result);
 	return &result;
 }

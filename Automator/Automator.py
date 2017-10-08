@@ -19,7 +19,7 @@ class Automator:
 		with open(self.own_script_path + "/data_injection.yaml", 'r') as stream:
 			data_loaded = yaml.load(stream)
 			self.rpcgen = data_loaded["rpcgen"]
-			self.ctests = data_loaded["ctests"]
+			self.cunit = data_loaded["cunit"]
 
 	def RPCGEN(self):
 		os.chdir(self.basepath)
@@ -36,14 +36,14 @@ class Automator:
 			content =  f.read()
 
 		#add tests
-		tests = [self.ctests["tests"][test_name] for test_name in self.ctests["tests"]]
-		content = content.split(self.ctests["inject_tests_here"])
+		tests = [self.cunit["tests"][test_name] for test_name in self.cunit["tests"]]
+		content = content.split(self.cunit["inject_tests_here"])
 		content = content[0] +  "\n".join(tests) + content[1]
 
 		#add asserts
-		content = content.split(self.ctests["insert_assertions_here"])
+		content = content.split(self.cunit["insert_assertions_here"])
 		assertion_template =  content[1].split("\n")[1]
-		assertions = [assertion_template.replace("testname", test_name) for test_name in self.ctests["tests"]]
+		assertions = [assertion_template.replace("testname", test_name) for test_name in self.cunit["tests"]]
 		content = content[0] +  " || \n".join(assertions) + content[1].replace(assertion_template,"")
 
 		#copy own CUnit template folder to new CUnit folder

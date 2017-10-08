@@ -6,7 +6,7 @@ rpcgen:
     - make
     - sudo systemctl add-wants multi-user.target rpcbind
 
-ctests:
+cunit:
   inject_tests_here: /* Insert your tests here */
   insert_assertions_here: "/* Add the tests to the suite here: Use the following line as template*/"
   tests:

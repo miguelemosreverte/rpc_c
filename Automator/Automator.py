@@ -20,6 +20,13 @@ class Automator:
 			data_loaded = yaml.load(stream)
 			self.rpcgen = data_loaded["rpcgen"]
 			self.cunit = data_loaded["cunit"]
+			self.cleanup = data_loaded["cleanup"]
+
+
+	def runAutomatedTasks(self):
+		self.run_cleanup()
+		self.RPCGEN()
+		self.CUnit()
 
 	def RPCGEN(self):
 		os.chdir(self.basepath)
@@ -30,28 +37,43 @@ class Automator:
 		os.chdir(self.working_directory)
 
 	def CUnit(self):
-		content = ""
+		template = ""
 		CUnit_dir = self.own_script_path + "/CUnit__TestGenerator/"
+
+		#read template content
 		with open (CUnit_dir + "/CUnitTests.c", 'r') as f:
-			content =  f.read()
+			template =  f.read()
 
 		#add tests
-		tests = [self.cunit["tests"][test_name] for test_name in self.cunit["tests"]]
-		content = content.split(self.cunit["inject_tests_here"])
-		content = content[0] +  "\n".join(tests) + content[1]
+		tests = [self.cunit["tests_codeblocks"][test_name] for test_name in self.cunit["tests_codeblocks"]]
+		for test_name in self.cunit["test_files"]:
+			with open (self.basepath + "/" + self.cunit["test_files"][test_name], 'r') as f:
+				tests.append(f.read())
+		#inject them
+		template = template.split(self.cunit["inject_tests_here"])
+		template = template[0] +  "\n".join(tests) + template[1]
 
 		#add asserts
-		content = content.split(self.cunit["insert_assertions_here"])
-		assertion_template =  content[1].split("\n")[1]
-		assertions = [assertion_template.replace("testname", test_name) for test_name in self.cunit["tests"]]
-		content = content[0] +  " || \n".join(assertions) + content[1].replace(assertion_template,"")
+		template = template.split(self.cunit["insert_assertions_here"])
+		assertion_template =  template[1].split("\n")[1]
+		test_names = dict(self.cunit["tests_codeblocks"].items() +  self.cunit["test_files"].items())
+		assertions = [assertion_template.replace("testname", test_name) for test_name in test_names]
+		template = template[0] +  " || \n".join(assertions) + template[1].replace(assertion_template,"")
 
 		#copy own CUnit template folder to new CUnit folder
 		newCUnit_dir = self.basepath + "/CUnit/"
+		if os.path.exists(newCUnit_dir): shutil.rmtree(newCUnit_dir)
 		shutil.copytree(CUnit_dir, newCUnit_dir)
 		#add modified CUnitTests.c to the new CUnit folder
 		with open (newCUnit_dir + "/CUnitTests.c", 'w') as f:
-			f.write(content)
+			f.write(template)
+
+	def run_cleanup(self):
+		suffixes = self.cleanup["suffixes"]
+		for item in os.listdir(self.basepath):
+		    for suffix in suffixes:
+				if item.endswith(suffix):
+					os.remove(os.path.join(self.basepath, item))
 
 
 if __name__ == "__main__":
@@ -59,22 +81,11 @@ if __name__ == "__main__":
 	parser.add_argument('filepath')
 	args = parser.parse_args()
 
-	def runAutomatedTask():
-		MyAutomator = Automator(args.filepath)
-		MyAutomator.RPCGEN()
-		MyAutomator.CUnit()
+	MyAutomator = Automator(args.filepath)
+
 
 	basepath, filename = os.path.split(args.filepath)
 	if not os.path.exists(args.filepath):
 		print "Pick an existing file"
-	elif os.path.exists(basepath + "/makefile"):
-		print "Already ran automated task. Do you want to overwrite it? Y/N"
-		if raw_input() in ["Y","y"]:
-			content = ""
-			with open (args.filepath, 'r') as f: content = f.read()
-			shutil.rmtree(basepath)
-			os.mkdir(basepath)
-			with open (args.filepath, 'w') as f: f.write(content)
-			runAutomatedTask()
 	else:
-		runAutomatedTask()
+		MyAutomator.runAutomatedTasks()

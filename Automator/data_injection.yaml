@@ -9,7 +9,7 @@ rpcgen:
 cunit:
   inject_tests_here: /* Insert your tests here */
   insert_assertions_here: "/* Add the tests to the suite here: Use the following line as template*/"
-  tests:
+  tests_codeblocks:
     testClient: |
         /* Simple test of the RPC client*/
         void testClient(void)
@@ -17,3 +17,27 @@ cunit:
           char * output = executeCmd("../add_client localhost");
           CU_ASSERT(strcmp(output, "resultado = 145\n") == 0);
         }
+  test_files:
+    testClient: client_unit_test.c
+
+cleanup:
+  suffixes:
+    - .h
+    - _client
+    - _client.c
+    - _client.o
+
+    - _server
+    - _server.c
+    - _server.o
+
+    - _clnt.c
+    - _clnt.o
+
+    - _svc.c
+    - _svc.o
+
+    - _xdr.c
+    - _xdr.o
+
+    - makefile
